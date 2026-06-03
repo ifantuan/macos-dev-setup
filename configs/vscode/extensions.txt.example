@@ -1,0 +1,15 @@
+# VS Code / Cursor 推荐扩展清单示例
+# 复制到私有文件或按需执行安装，不要把账号同步状态当作仓库恢复的一部分。
+
+eamodio.gitlens
+editorconfig.editorconfig
+esbenp.prettier-vscode
+github.copilot
+github.copilot-chat
+ms-azuretools.vscode-docker
+ms-python.python
+ms-python.vscode-pylance
+redhat.java
+vscjava.vscode-maven
+vscjava.vscode-java-pack
+vue.volar

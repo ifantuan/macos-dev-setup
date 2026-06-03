@@ -1,0 +1,8 @@
+# 个人机器差异示例。只记录和个人恢复有关、可公开的工具名。
+
+tap "homebrew/bundle"
+
+# 按需添加个人效率或媒体工具，例如：
+# cask "iina"
+# cask "xmind"
+# cask "typora"

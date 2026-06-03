@@ -1,0 +1,8 @@
+{
+  "editor.fontFamily": "Maple Mono NF CN, JetBrains Mono, monospace",
+  "editor.formatOnSave": true,
+  "editor.minimap.enabled": false,
+  "files.autoSave": "afterDelay",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "workbench.startupEditor": "none"
+}

@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# 本地临时文件
+*.log
+*.tmp
+*.bak
+
+# 凭证与本机私有配置
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+id_rsa*
+id_ed25519*
+
+# 编辑器
+.vscode/
+.idea/

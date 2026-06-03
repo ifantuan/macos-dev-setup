@@ -1,0 +1,8 @@
+# npm 配置模板。不要写入真实 token。
+registry=https://registry.npmjs.org/
+fund=false
+audit=true
+
+# 私有 registry 示例：
+# @your-scope:registry=https://registry.example.com/
+# //registry.example.com/:_authToken=${NPM_TOKEN}

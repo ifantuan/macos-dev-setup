@@ -1,0 +1,24 @@
+# Git 配置模板。复制到 ~/.gitconfig 后再填入真实姓名和邮箱。
+[user]
+	name = Your Name
+	email = your-name@example.com
+
+[core]
+	editor = code --wait
+	autocrlf = input
+
+[init]
+	defaultBranch = main
+
+[pull]
+	ff = only
+
+[push]
+	default = simple
+	autoSetupRemote = true
+
+[rerere]
+	enabled = true
+
+[commit]
+	gpgsign = false

@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install validation tools
+        run: |
+          brew install shellcheck gitleaks
+          brew install --cask ghostty font-maple-mono-nf-cn
+
+      - name: Validate dry-run paths
+        run: |
+          ./scripts/quickstart.sh --dry-run
+          ./scripts/bootstrap.sh --profile work-example --dry-run
+          ./scripts/bootstrap.sh --profile personal-example --dry-run
+          ./scripts/apply-macos-defaults.sh --dry-run
+          ./scripts/sync-back.sh --dry-run
+          ./scripts/drill-clean-home.sh
+          ./scripts/drill-idempotency.sh
+
+      - name: Run doctor
+        run: REQUIRE_SHELLCHECK=1 REQUIRE_GITLEAKS=1 REQUIRE_GHOSTTY_VALIDATE=1 ./scripts/doctor.sh

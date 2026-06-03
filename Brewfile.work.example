@@ -1,0 +1,9 @@
+# 工作机器差异示例。只记录可公开的工具名，不包含公司内网地址、证书、token 或代理账号。
+
+tap "homebrew/bundle"
+
+# 按公司允许公开记录的范围添加工具，例如：
+# brew "azure-cli"
+# brew "kubectl"
+# brew "helm"
+# cask "google-cloud-sdk"

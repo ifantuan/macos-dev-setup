@@ -1,0 +1,28 @@
+# Starship 提示符配置。保持轻量，避免拖慢新终端启动。
+add_newline = false
+
+format = "$directory$git_branch$git_status$nodejs$python$java$cmd_duration$line_break$character"
+
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+
+[git_branch]
+format = "[$symbol$branch]($style) "
+symbol = "git:"
+
+[git_status]
+format = "[$all_status$ahead_behind]($style) "
+
+[nodejs]
+format = "[node $version]($style) "
+
+[python]
+format = "[py $version]($style) "
+
+[java]
+format = "[java $version]($style) "
+
+[cmd_duration]
+min_time = 1000
+format = "[$duration]($style) "
