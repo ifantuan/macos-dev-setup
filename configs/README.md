@@ -17,6 +17,7 @@
 | `configs/maven/settings.xml.example` | `~/.m2/settings.xml` | Maven 模板，真实账号通过环境变量或私有文件提供 |
 | `configs/vscode/settings.json.example` | `~/Library/Application Support/Code/User/settings.json` | VS Code 设置模板，适合复制后按机器调整 |
 | `configs/vscode/extensions.txt.example` | 手动执行 `code --install-extension` | VS Code / Cursor 推荐扩展示例 |
+| `configs/squirrel/rime/` | `~/Library/Rime/` | Squirrel/Rime 输入法配置目录，可能包含用户词库 |
 
 ## 修改原则
 
@@ -25,6 +26,18 @@
 - 本机差异优先用环境变量或单独私有文件处理，不直接写死到公共配置。
 - `configs/zsh/zshrc` 会加载 `~/.zshrc.local`，该文件不要提交。
 - 修改后运行 `./scripts/doctor.sh`。
+
+## 从本机备份
+
+需要把当前机器的软件配置备份回仓库时，优先使用可选择的备份脚本：
+
+```bash
+./scripts/backup-configs.sh --list
+./scripts/backup-configs.sh --safe --dry-run
+./scripts/backup-configs.sh --items zsh,ghostty,tmux
+```
+
+涉及 `git`、`ssh`、`npm`、`pip`、`maven`、`squirrel-app` 时必须显式加 `--include-sensitive`，并在提交前人工审查 `git diff`。
 
 ## 常见扩展
 

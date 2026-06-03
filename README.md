@@ -14,6 +14,7 @@
 - `bootstrap.sh` 默认备份旧配置，降低误覆盖风险。
 - `doctor.sh` 提供基础自检，适合提交前和新机部署后运行。
 - 提供 `audit-environment.sh`，只读检查本机环境和仓库声明的差异。
+- 提供 `backup-configs.sh`，可按软件选择把本机配置备份回仓库。
 - 提供 `sync-back.sh`，把本机配置变更同步回仓库并保留人工 diff 审查。
 - 正式执行写入型脚本时归档日志到 `~/.macos-dev-setup-logs/`，便于恢复失败后排障。
 - 记录 core、full、work、personal 的环境分层边界，防止工作机器敏感配置污染公开仓库。
@@ -164,6 +165,7 @@ make quickstart
 make dry-run
 make defaults
 make audit
+make backup-configs
 make sync-back
 make doctor
 make drill
@@ -194,6 +196,9 @@ source ~/.zshrc
 
 ```bash
 ./scripts/audit-environment.sh --profile core
+./scripts/backup-configs.sh --list
+./scripts/backup-configs.sh --safe --dry-run
+./scripts/backup-configs.sh --items zsh,ghostty,tmux
 ./scripts/sync-back.sh --dry-run
 ./scripts/sync-back.sh
 ./scripts/sync-back.sh --include-brew

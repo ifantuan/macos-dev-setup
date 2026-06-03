@@ -1,4 +1,4 @@
-.PHONY: help quickstart core full defaults audit sync-back runtimes doctor check dry-run drill drill-clean drill-idempotency record-drill brew-check brew-install brew-cleanup-preview
+.PHONY: help quickstart core full defaults audit backup-configs sync-back runtimes doctor check dry-run drill drill-clean drill-idempotency record-drill brew-check brew-install brew-cleanup-preview
 
 help:
 	@printf '%s\n' '常用命令：'
@@ -7,6 +7,7 @@ help:
 	@printf '  %-18s %s\n' 'make full' '安装完整 Homebrew 清单和配置'
 	@printf '  %-18s %s\n' 'make defaults' '应用可审计的 macOS 默认设置'
 	@printf '  %-18s %s\n' 'make audit' '检查本机环境并输出和仓库的差异'
+	@printf '  %-18s %s\n' 'make backup-configs' '预演备份可选择的软件配置到仓库'
 	@printf '  %-18s %s\n' 'make sync-back' '同步本机配置回仓库'
 	@printf '  %-18s %s\n' 'make runtimes' '初始化 Java / Python / Node.js'
 	@printf '  %-18s %s\n' 'make doctor' '运行仓库自检'
@@ -33,6 +34,9 @@ defaults:
 
 audit:
 	./scripts/audit-environment.sh
+
+backup-configs:
+	./scripts/backup-configs.sh --safe --dry-run
 
 sync-back:
 	./scripts/sync-back.sh

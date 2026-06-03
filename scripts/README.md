@@ -11,6 +11,7 @@
 | `apply-macos-defaults.sh` | 写入 Finder、Dock、键盘、截图等可审计的 macOS 默认设置 | 是 |
 | `audit-environment.sh` | 检查本机命令、Brewfile、配置文件和 macOS defaults，并输出与仓库的差异 | 否 |
 | `install-runtimes.sh` | 安装 Node.js、Python、Java、Maven | 是 |
+| `backup-configs.sh` | 可选择备份本机软件配置到仓库，支持预演和敏感项保护 | 是，写入仓库 |
 | `sync-back.sh` | 将本机 zsh、Ghostty、Starship、tmux 配置同步回仓库，可选导出 Brewfile | 是 |
 | `brew-maintenance.sh` | 检查、安装和预演清理 Homebrew 清单 | 可选 |
 | `drill-clean-home.sh` | 用临时 `HOME` 验证恢复路径 | 是，仅写入临时目录 |
@@ -191,6 +192,48 @@ make record-drill
 ```
 
 同步后必须检查 `git diff`。不要把私钥、token、公司内网地址或临时本地路径带进提交。
+
+## 选择性备份软件配置
+
+`backup-configs.sh` 用于把当前机器的部分软件配置备份到仓库。它和 `sync-back.sh` 的区别是：`sync-back.sh` 固定同步常用配置，`backup-configs.sh` 可以按软件名称选择。
+
+查看可备份项：
+
+```bash
+./scripts/backup-configs.sh --list
+```
+
+预演备份默认安全项：
+
+```bash
+./scripts/backup-configs.sh --safe --dry-run
+```
+
+备份指定配置：
+
+```bash
+./scripts/backup-configs.sh --items zsh,ghostty,tmux
+```
+
+交互式选择：
+
+```bash
+./scripts/backup-configs.sh --interactive
+```
+
+可选项包括 `zsh`、`ghostty`、`starship`、`tmux`、`vscode-settings`、`vscode-extensions`、`brew`、`git`、`ssh`、`npm`、`pip`、`maven`、`squirrel-app`。其中 `git`、`ssh`、`npm`、`pip`、`maven`、`squirrel-app` 可能包含账号、token、内网地址、私钥路径、用户词库或个人输入习惯，默认不会备份；确认要备份时必须显式加：
+
+```bash
+./scripts/backup-configs.sh --items git,ssh,squirrel-app --include-sensitive
+```
+
+脚本只做基础敏感词提示，不会代替人工审查。备份后必须检查：
+
+```bash
+git diff
+```
+
+确认没有 token、私钥、内网地址和不应公开的本机路径后再提交。
 
 ## 扩展方式
 

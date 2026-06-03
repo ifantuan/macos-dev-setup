@@ -51,6 +51,7 @@ validate_ghostty_config() {
 check "bootstrap.sh 语法" bash -n "$REPO_ROOT/scripts/bootstrap.sh"
 check "apply-macos-defaults.sh 语法" bash -n "$REPO_ROOT/scripts/apply-macos-defaults.sh"
 check "audit-environment.sh 语法" bash -n "$REPO_ROOT/scripts/audit-environment.sh"
+check "backup-configs.sh 语法" bash -n "$REPO_ROOT/scripts/backup-configs.sh"
 check "quickstart.sh 语法" bash -n "$REPO_ROOT/scripts/quickstart.sh"
 check "brew-maintenance.sh 语法" bash -n "$REPO_ROOT/scripts/brew-maintenance.sh"
 check "drill-clean-home.sh 语法" bash -n "$REPO_ROOT/scripts/drill-clean-home.sh"
