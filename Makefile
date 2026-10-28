@@ -1,4 +1,4 @@
-.PHONY: help quickstart core full defaults audit backup-configs sync-back runtimes doctor check dry-run drill drill-clean drill-idempotency record-drill brew-check brew-install brew-cleanup-preview
+.PHONY: help quickstart core full defaults audit backup-configs sync-back runtimes doctor test check dry-run drill drill-clean drill-idempotency record-drill brew-check brew-install brew-cleanup-preview
 
 help:
 	@printf '%s\n' '常用命令：'
@@ -11,6 +11,7 @@ help:
 	@printf '  %-18s %s\n' 'make sync-back' '同步本机配置回仓库'
 	@printf '  %-18s %s\n' 'make runtimes' '初始化 Java / Python / Node.js'
 	@printf '  %-18s %s\n' 'make doctor' '运行仓库自检'
+	@printf '  %-18s %s\n' 'make test' '运行隔离回归测试，不安装软件'
 	@printf '  %-18s %s\n' 'make dry-run' '预演快速启动路径'
 	@printf '  %-18s %s\n' 'make drill' '运行半恢复演练检查'
 	@printf '  %-18s %s\n' 'make drill-clean' '用临时 HOME 运行恢复演练'
@@ -47,7 +48,10 @@ runtimes:
 doctor:
 	./scripts/doctor.sh
 
-check: doctor
+test:
+	python3 tests/test_regressions.py
+
+check: doctor test
 
 dry-run:
 	./scripts/quickstart.sh --dry-run

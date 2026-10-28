@@ -5,8 +5,9 @@ INSTALL_JAVA="${INSTALL_JAVA:-1}"
 INSTALL_PYTHON="${INSTALL_PYTHON:-1}"
 INSTALL_NODE="${INSTALL_NODE:-1}"
 DRY_RUN="${DRY_RUN:-0}"
-JAVA_VERSION="${JAVA_VERSION:-8.0.492-zulu}"
-PYTHON_VERSION="${PYTHON_VERSION:-3.12.2}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=configs/runtimes/versions.sh
+source "$REPO_ROOT/configs/runtimes/versions.sh"
 PYTHON_PROVIDER="${PYTHON_PROVIDER:-pyenv}"
 
 usage() {
@@ -24,7 +25,8 @@ usage() {
 
 环境变量：
   JAVA_VERSION=8.0.492-zulu
-  PYTHON_VERSION=3.12.2
+  PYTHON_VERSION=3.12.16
+  NODE_VERSION=lts-latest
   PYTHON_PROVIDER=pyenv
   DRY_RUN=1
 EOF
@@ -68,7 +70,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/lib/logging.sh
 source "$REPO_ROOT/scripts/lib/logging.sh"
 setup_script_logging "install-runtimes"
@@ -103,95 +104,99 @@ require_command() {
   fi
 }
 
-# SDKMAN 默认会在安装同名版本时询问确认，快速启动路径需要关闭交互。
-set_sdkman_config() {
-  local key="$1"
-  local value="$2"
-  local file="$SDKMAN_DIR/etc/config"
-  local tmp
+# 各阶段显式传递失败，避免在条件调用函数时依赖 set -e 的隐式行为。
+install_node() {
+  require_command fnm || return
+  require_command pnpm || return
+  echo "==> 安装 Node.js $NODE_VERSION；pnpm 由 Homebrew 管理"
+  local environment
+  if [[ "$DRY_RUN" != "1" ]]; then
+    environment="$(fnm env --use-on-cd --shell bash)" || return
+    eval "$environment" || return
+  fi
+  if [[ "$NODE_VERSION" == "lts-latest" ]]; then
+    run fnm install --lts || return
+  else
+    run fnm install "$NODE_VERSION" || return
+  fi
+  run fnm default "$NODE_VERSION" || return
+  run fnm use "$NODE_VERSION" || return
+  run node --version || return
+  run pnpm --version
+}
 
+install_python() {
+  require_command "$PYTHON_PROVIDER" || return
+  echo "==> 使用 $PYTHON_PROVIDER 安装 Python $PYTHON_VERSION"
+  if [[ "$PYTHON_PROVIDER" == "pyenv" ]]; then
+    run pyenv install -s "$PYTHON_VERSION" || return
+    run pyenv global "$PYTHON_VERSION" || return
+    run env PYENV_VERSION="$PYTHON_VERSION" pyenv exec python --version
+  else
+    run uv python install "$PYTHON_VERSION" --default || return
+    run uv run --no-project --python "$PYTHON_VERSION" python --version
+  fi
+}
+
+install_java() (
+  # SDKMAN 的 Shell 函数不保证兼容 nounset；仅在本阶段子 Shell 中关闭。
+  set +u
+  export SDKMAN_DIR="$HOME/.sdkman"
+  if [[ ! -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]]; then
+    require_command curl || return
+    echo "==> 安装 SDKMAN"
+    if [[ "$DRY_RUN" == "1" ]]; then
+      echo "[dry-run] 在私有临时目录下载并执行 SDKMAN 安装器，退出后清理"
+    else
+      installer_dir="$(mktemp -d "${TMPDIR:-/tmp}/macos-dev-setup-sdkman.XXXXXX")" || return
+      trap 'rm -rf "$installer_dir"' EXIT
+      curl -fsSL "https://get.sdkman.io?ci=true&rcupdate=false" -o "$installer_dir/install.sh" || return
+      bash "$installer_dir/install.sh" || return
+    fi
+  fi
   if [[ "$DRY_RUN" == "1" ]]; then
-    echo "[dry-run] 设置 SDKMAN 配置：${key}=${value}"
+    echo "[dry-run] 加载 SDKMAN，安装并选择 Java $JAVA_VERSION，安装 Maven 并验证版本"
     return 0
   fi
-
-  [[ -f "$file" ]] || return 0
-  tmp="$(mktemp)"
-  if grep -q "^${key}=" "$file"; then
-    awk -F= -v key="$key" -v value="$value" 'BEGIN { OFS = "=" } $1 == key { $0 = key "=" value } { print }' "$file" > "$tmp"
-  else
-    cp "$file" "$tmp"
-    printf '\n%s=%s\n' "$key" "$value" >> "$tmp"
+  # shellcheck disable=SC1091
+  source "$SDKMAN_DIR/bin/sdkman-init.sh" || return
+  # sdk 每次调用都会重读用户配置，环境变量无法关闭询问；断开输入后按默认答案执行，且不改写配置文件。
+  if [[ ! -d "$SDKMAN_DIR/candidates/java/$JAVA_VERSION" ]]; then
+    sdk install java "$JAVA_VERSION" </dev/null || return
   fi
-  mv "$tmp" "$file"
+  sdk default java "$JAVA_VERSION" || return
+  if [[ ! -x "$SDKMAN_DIR/candidates/maven/current/bin/mvn" ]]; then
+    sdk install maven </dev/null || return
+  fi
+  "$SDKMAN_DIR/candidates/java/$JAVA_VERSION/bin/java" -version || return
+  "$SDKMAN_DIR/candidates/maven/current/bin/mvn" -v
+)
+
+failures=0
+run_stage() {
+  local name="$1"
+  shift
+  if "$@"; then
+    echo "==> $name 阶段通过"
+  else
+    local status=$?
+    echo "==> $name 阶段失败，退出码：$status" >&2
+    failures=$((failures + 1))
+  fi
 }
 
 if [[ "$INSTALL_NODE" == "1" ]]; then
-  if require_command fnm; then
-    echo "==> 安装 Node.js LTS 和 pnpm"
-    if [[ "$DRY_RUN" != "1" ]]; then
-      eval "$(fnm env --use-on-cd --shell bash)"
-    fi
-    run fnm install --lts
-    run fnm default lts-latest
-    run fnm use lts-latest
-    if [[ "$DRY_RUN" != "1" ]]; then
-      eval "$(fnm env --use-on-cd --shell bash)"
-    fi
-    if command -v corepack >/dev/null 2>&1 || [[ "$DRY_RUN" == "1" ]]; then
-      run corepack enable
-      run corepack prepare pnpm@latest --activate
-    else
-      echo "跳过 pnpm 激活：未找到 corepack，请重新打开终端后执行 corepack enable" >&2
-    fi
-  fi
+  run_stage "Node.js / pnpm" install_node
 fi
-
 if [[ "$INSTALL_PYTHON" == "1" ]]; then
-  case "$PYTHON_PROVIDER" in
-    pyenv)
-      if require_command pyenv; then
-        echo "==> 使用 pyenv 安装 Python $PYTHON_VERSION"
-        run pyenv install -s "$PYTHON_VERSION"
-        run pyenv global "$PYTHON_VERSION"
-      fi
-      ;;
-    uv)
-      if require_command uv; then
-        echo "==> 使用 uv 安装 Python $PYTHON_VERSION"
-        # uv 保留给需要预编译解释器或项目依赖管理的场景。
-        run uv python install "$PYTHON_VERSION" --default
-        if [[ "$DRY_RUN" != "1" ]]; then
-          uv python list --only-installed || true
-        fi
-      fi
-      ;;
-  esac
+  run_stage "Python" install_python
 fi
-
 if [[ "$INSTALL_JAVA" == "1" ]]; then
-  export SDKMAN_DIR="$HOME/.sdkman"
-  if [[ ! -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]]; then
-    echo "==> 安装 SDKMAN"
-    run curl -fsSL "https://get.sdkman.io?ci=true&rcupdate=false" -o /tmp/macos-dev-setup-sdkman-install.sh
-    run bash /tmp/macos-dev-setup-sdkman-install.sh
-  fi
-  set_sdkman_config sdkman_auto_answer true
-  set_sdkman_config sdkman_colour_enable false
-
-  if [[ "$DRY_RUN" == "1" ]]; then
-    echo "[dry-run] source $SDKMAN_DIR/bin/sdkman-init.sh"
-    echo "[dry-run] sdk install java $JAVA_VERSION"
-    echo "[dry-run] sdk default java $JAVA_VERSION"
-    echo "[dry-run] sdk install maven"
-  else
-    # shellcheck disable=SC1091
-    source "$SDKMAN_DIR/bin/sdkman-init.sh"
-    echo "==> 安装 Java $JAVA_VERSION 和 Maven"
-    sdk install java "$JAVA_VERSION"
-    sdk default java "$JAVA_VERSION"
-    sdk install maven || true
-  fi
+  run_stage "Java / Maven" install_java
 fi
 
+if [[ "$failures" -gt 0 ]]; then
+  echo "==> 运行时初始化失败：$failures 个阶段未通过。" >&2
+  exit 1
+fi
 echo "==> 运行时初始化完成"

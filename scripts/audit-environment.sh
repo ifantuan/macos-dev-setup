@@ -199,11 +199,11 @@ audit_brewfile() {
       continue
     fi
 
-    if env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$brewfile" >/dev/null 2>&1; then
+    if env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$brewfile" --no-upgrade >/dev/null 2>&1; then
       echo "已满足仓库清单。"
     else
-      echo "发现缺失或需要更新的 Homebrew 依赖："
-      env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$brewfile" || true
+      echo "发现缺失的 Homebrew 依赖或清单检查错误："
+      env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --verbose --file "$brewfile" --no-upgrade || true
       mark_difference
     fi
   done

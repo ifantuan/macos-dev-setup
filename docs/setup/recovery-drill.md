@@ -18,7 +18,8 @@
 | 项目 | 验收命令 |
 |------|----------|
 | 仓库自检 | `./scripts/doctor.sh` |
-| 核心软件清单 | `brew bundle check --file Brewfile.core` |
+| 隔离回归测试 | `make test` |
+| 核心软件清单 | `brew bundle check --file Brewfile.core --no-upgrade` |
 | Shell 启动 | `zsh -n ~/.zshrc` |
 | Git | `git --version` |
 | GitHub CLI | `gh auth status` |
@@ -88,6 +89,8 @@ make record-drill
 ```bash
 ./scripts/record-recovery-drill.sh --run-quickstart
 ```
+
+完整 profile 使用 `./scripts/record-recovery-drill.sh --profile full --run-quickstart`。预演、真实安装与最终环境审计使用同一 profile；审计启用 `--strict`，差异会使记录命令返回非零。即使生成了报告，也必须按其中的退出码与人工记录判断恢复是否成功。
 
 ## 已记录演练
 

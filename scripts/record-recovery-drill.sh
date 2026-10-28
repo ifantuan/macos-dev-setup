@@ -13,9 +13,9 @@ usage() {
 用法：scripts/record-recovery-drill.sh [选项]
 
 选项：
-  --profile <name>       记录目标 profile，默认 core
+  --profile <name>       执行并记录目标 profile：core 或 full，默认 core
   --output-dir <path>    覆盖报告目录，默认 docs/setup/recovery-drills
-  --run-quickstart       真实执行 make quickstart；默认只执行 make dry-run
+  --run-quickstart       真实执行指定 profile 的 quickstart；默认仅预演安装
   -h, --help             显示帮助
 
 环境变量：
@@ -58,6 +58,11 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+case "$PROFILE" in
+  core|full) ;;
+  *) echo "未知 profile：$PROFILE。可选值：core, full" >&2; exit 1 ;;
+esac
 
 timestamp="$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$OUTPUT_DIR"
@@ -129,10 +134,10 @@ else
   append
 fi
 
-append_command "快速路径预演" make -C "$REPO_ROOT" dry-run
+append_command "$PROFILE 路径预演" "$REPO_ROOT/scripts/quickstart.sh" --profile "$PROFILE" --dry-run
 
 if [[ "$RUN_QUICKSTART" == "1" ]]; then
-  append_command "真实 quickstart" make -C "$REPO_ROOT" quickstart
+  append_command "真实 $PROFILE quickstart" "$REPO_ROOT/scripts/quickstart.sh" --profile "$PROFILE"
 else
   append "### 真实 quickstart"
   append
@@ -143,7 +148,7 @@ fi
 append_command "clean HOME 演练" make -C "$REPO_ROOT" drill-clean
 append_command "幂等演练" make -C "$REPO_ROOT" drill-idempotency
 append_command "仓库自检" "$REPO_ROOT/scripts/doctor.sh"
-append_command "核心环境审计" "$REPO_ROOT/scripts/audit-environment.sh" --profile core --no-diff
+append_command "$PROFILE 环境严格验收" "$REPO_ROOT/scripts/audit-environment.sh" --profile "$PROFILE" --no-diff --strict
 
 append "## 人工记录"
 append

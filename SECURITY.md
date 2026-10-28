@@ -35,8 +35,12 @@
 默认备份目录：
 
 ```text
-~/.macos-dev-setup-backup/<时间戳>
+~/.macos-dev-setup-backup/<时间戳>.<随机后缀>
 ```
+
+`BACKUP_DIR` 指定备份根目录，每次执行都会新建独立批次。普通文件保存到原相对路径；符号链接本身同样保存，可读取的链接目标内容另存到批次的 `link-targets/`。安装时原子替换链接本身，不改写链接指向的文件。配置父目录为符号链接时会提前拒绝写入，需人工确定目录管理方式。
+
+Homebrew 7 的实际 Bundle 清理会重置全局显式信任。`--cleanup-preview` 断开子进程标准输入，保证无法确认删除；`--cleanup-force` 必须另加 `--acknowledge-trust-reset`，并在删除前将有效信任快照保存到独立的 `trust-<时间戳>.<随机后缀>/trust.json`。`--yes` 只跳过文字确认，不能替代信任重置确认。信任快照不备份已卸载软件或应用数据。
 
 可预演：
 

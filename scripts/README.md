@@ -6,7 +6,7 @@
 
 | 脚本 | 用途 | 是否会写入本机 |
 |------|------|----------------|
-| `quickstart.sh` | 半小时快速启动入口，串联核心安装、运行时和自检 | 是 |
+| `quickstart.sh` | 串联清单安装、运行时和自检，默认 core，可选 `--profile full` | 是 |
 | `bootstrap.sh` | 安装 Brewfile，并复制公开安全的 `configs/` 到家目录 | 是 |
 | `apply-macos-defaults.sh` | 写入 Finder、Dock、键盘、截图等可审计的 macOS 默认设置 | 是 |
 | `audit-environment.sh` | 检查本机命令、Brewfile、配置文件和 macOS defaults，并输出与仓库的差异 | 否 |
@@ -20,6 +20,10 @@
 | `doctor.sh` | 检查脚本语法、Markdown、Brewfile 和配置 | 否 |
 
 所有会写入本机的脚本都支持 `--dry-run` 或可通过 `make dry-run` 预演。
+
+共享实现包括 `lib/files.sh`（临时文件生成、成功校验后原子替换）、`lib/logging.sh`（私有临时目录中的日志管道）和 `lib/find-shadowed-packages.rb`（通过 Homebrew 7 的 Bundle 接口只读核对第三方包来源与清单信任）。Ruby 检测脚本由 `brew ruby` 加载 Homebrew 库，语法检查纳入 doctor 和 CI。运行时版本从 `configs/runtimes/versions.sh` 读取，pnpm 由 Homebrew 管理。`make test` 运行隔离回归测试，详细边界见 [../tests/README.md](../tests/README.md)。
+
+bootstrap 将 `BACKUP_DIR` 视为备份根目录，每次执行生成独立批次。叶子配置为符号链接时，保留原链接与可读取的目标内容，再替换链接本身；父目录为链接时跳过该项并在结尾汇总，父路径失效或目标为目录时提前拒绝写入；替换普通文件时沿用其原权限。恢复说明见 [../docs/setup/audit-fixes-2026-10-27.md](../docs/setup/audit-fixes-2026-10-27.md)。
 
 `doctor.sh` 默认做仓库级低风险检查，不要求当前机器已经安装完整核心清单。如果要把缺失 Homebrew 依赖、字体和完整安装状态也视为失败，使用：
 
@@ -91,10 +95,18 @@ make record-drill
 真正删除前必须先看清预演输出，再执行。脚本会要求输入 `cleanup` 二次确认：
 
 ```bash
-./scripts/brew-maintenance.sh --profile full --cleanup-force
+./scripts/brew-maintenance.sh --profile full --cleanup-force --acknowledge-trust-reset
 ```
 
 非交互环境必须显式加 `--yes` 或设置 `CONFIRM_CLEANUP=1`。
+
+Homebrew 7 的清理会按选中清单重置全局显式信任，所以 `--acknowledge-trust-reset` 也是必需参数，不能用 `--yes` 替代。删除前会保存并校验私有 `trust.json` 快照，失败则取消清理。默认清单没有第三方信任，执行清理会移除全部显式授权；私有多清单环境应优先使用完整私有快照，避免对不完整公共清单执行强制清理。
+
+在交互确认和快照之前，脚本用 Bundle 解析清单，按名称及类型核对已安装 formula 和 cask，并用 Bundle 的信任规则判断清理后是否保留其来源授权。缩进、引号、选项和条件不会改变检测结果；清单保留的第三方包没有相应授权时拒绝清理，解析或来源核对失败也会停止。完整名称本身不是授权：保留第三方来源需要在私有清单中显式设置 `trusted: true`，或对对应 tap／包设置授权。cask 按短 token 保留，指向其他 tap 的同名声明不能替代对实际来源的核验。
+
+迁移提示按 formula、cask 分别输出卸载命令，参数进行 Shell 转义，中文、空格和引号路径可直接复制。命令仅供人工审查后执行；重装前须确认清单已经声明目标来源。cask 卸载提示不使用 `--zap`，但这不保证所有应用卸载脚本都保留数据。
+
+预演将子进程输入接到 `/dev/null`，不能确认删除。退出码 0 表示预演正常完成；非零值原样返回，其中 1 可能是有待清理项，也可能是实际错误，必须阅读输出，不能直接转为成功或自动继续强制清理。
 
 ## 恢复演练记录
 
@@ -109,6 +121,8 @@ make record-drill
 ```bash
 ./scripts/record-recovery-drill.sh --run-quickstart
 ```
+
+选择完整路径时加 `--profile full`；该值会传递给预演、真实安装和最终审计。最终审计使用 `--strict`，缺失软件、命令或配置差异会让记录命令返回非零；“报告已生成”不等于“环境通过”。
 
 ## 环境差异审计
 
@@ -228,6 +242,8 @@ make record-drill
 ```
 
 脚本只做基础敏感词提示，不会代替人工审查。备份后必须检查：
+
+普通文件、Brewfile、扩展清单先写临时文件，成功后再替换目标；导出失败保留旧文件，继续处理其他选择项，最后汇总失败并返回非零。Rime 目录仍采用合并备份，删除项不会自动从仓库移除；VS Code 设置仍要求标准 JSON。这两项可选增强不属于本轮 P1/P2 修复范围。
 
 ```bash
 git diff

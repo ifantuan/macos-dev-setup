@@ -34,10 +34,13 @@ configs/    可复制到家目录的配置，目录说明见 configs/README.md
 docs/       手册和运行规范，目录说明见 docs/README.md
 scripts/    安装和校验脚本，目录说明见 scripts/README.md
 scripts/lib/ 脚本共享辅助逻辑
+tests/      隔离回归测试，使用临时目录和命令桩覆盖实际控制流
 Makefile    常用入口命令，降低新用户使用成本
 Brewfile.core 30 分钟核心安装清单
 Brewfile    Homebrew 声明式清单
 ```
+
+运行时默认版本集中在 `configs/runtimes/versions.sh`；core/full 默认只使用官方 Homebrew 源。第三方软件按包列在个人示例中，由用户审查后放入私有清单。文件替换复用 `scripts/lib/files.sh`，避免各入口重复实现先截断再导出的危险操作。
 
 目录级 `README.md` 是扩展契约：新增配置、脚本或专题文档时，先更新对应目录说明，再更新根 README 的结构树。
 

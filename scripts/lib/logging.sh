@@ -16,10 +16,13 @@ setup_script_logging() {
   timestamp="$(date +%Y%m%d-%H%M%S)"
   local log_file="$log_dir/${timestamp}-$$-${script_name}.log"
   local fifo
+  local temporary_dir
 
   mkdir -p "$log_dir"
-  fifo="$(mktemp -u "${TMPDIR:-/tmp}/macos-dev-setup-log.XXXXXX")"
+  temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/macos-dev-setup-log.XXXXXX")" || return
+  fifo="$temporary_dir/output"
   if ! mkfifo "$fifo"; then
+    rmdir "$temporary_dir"
     return 0
   fi
 
@@ -29,5 +32,6 @@ setup_script_logging() {
 
   exec > "$fifo" 2>&1
   rm -f "$fifo"
+  rmdir "$temporary_dir"
   printf '==> 日志归档：%s\n' "$log_file"
 }

@@ -5,6 +5,7 @@
 *.log
 *.tmp
 *.bak
+__pycache__/
 
 # 凭证与本机私有配置
 .env

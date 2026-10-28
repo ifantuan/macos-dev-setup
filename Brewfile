@@ -3,11 +3,7 @@
 # 目标：复刻 Java / Python / 前端 / AI 编码工作站
 # ============================================================================
 
-tap "homebrew/bundle"
-tap "anomalyco/tap"
-tap "detachhead/tap"
-tap "oven-sh/bun"
-tap "x6nux/zedg"
+# 默认清单仅使用官方源；第三方软件由个人示例单独说明。
 
 # ----------------------------------------------------------------------------
 # 基础构建与网络工具
@@ -103,7 +99,6 @@ cask "visual-studio-code"
 cask "vscodium"
 cask "cursor"
 cask "zed"
-cask "zedg"
 cask "jetbrains-toolbox"
 cask "hbuilderx"
 cask "coteditor"
@@ -129,7 +124,6 @@ cask "lm-studio"
 cask "cherry-studio"
 cask "opencode-desktop"
 cask "cc-switch"
-cask "rebased"
 
 # ----------------------------------------------------------------------------
 # 系统效率工具

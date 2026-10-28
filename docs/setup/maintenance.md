@@ -29,8 +29,16 @@ brew cleanup
 只有确认预演输出无误后，才执行强制清理。脚本会要求输入 `cleanup` 二次确认：
 
 ```bash
-./scripts/brew-maintenance.sh --profile full --cleanup-force
+./scripts/brew-maintenance.sh --profile full --cleanup-force --acknowledge-trust-reset
 ```
+
+Homebrew 7 会同时重置全局显式信任，所以必须确认软件删除和信任变更两种影响。`--yes` 不替代 `--acknowledge-trust-reset`。脚本先保存有效信任快照再清理，路径会输出到终端；快照不能恢复被卸载的应用数据。默认官方源清单会移除全部显式第三方信任，私有多清单用户应先整理完整快照。
+
+脚本在确认和快照之前通过 Bundle 解析清单，同时核对已安装 formula、cask 的来源和清单保留的信任。默认清单按短名称保留的第三方包会被拦截，例如早期从 `oven-sh/bun`、`anomalyco/tap`、`farion1231/ccswitch` 安装的 bun、opencode、cc-switch；单引号、缩进、选项和含 `+`、`.` 的名称均按解析后的名称判断。解析或来源读取失败时同样取消清理。
+
+迁移时先确认清单已经指向目标来源，再审查并执行提示中的卸载和重装命令；提示已转义空格、中文和引号等路径字符，cask 命令不加 `--zap`。如需保留第三方来源，应在完整私有清单中使用其完整名称并显式声明信任，也可按 tap 或具体包授权；仅把短名称换成完整名称仍不足以保留信任。不要将其他 tap 或另一种包类型的同名授权当成实际来源授权。
+
+预演始终禁止交互删除。退出 1 可能是待清理列表或命令错误，脚本会保留原退出码，不再报告成功；先阅读诊断再决定后续操作。
 
 ## 每月快照
 

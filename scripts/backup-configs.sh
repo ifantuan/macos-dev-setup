@@ -200,7 +200,7 @@ list_entries() {
   printf '%-20s %-10s %-52s %s\n' "----" "----" "------------" "----"
   for entry in "${CATALOG_ENTRIES[@]}"; do
     parse_entry "$entry"
-    printf '%-20s %-10s %-52s %s\n' "$ENTRY_NAME" "$ENTRY_RISK" "${ENTRY_TARGET#$REPO_ROOT/}" "$ENTRY_DESCRIPTION"
+    printf '%-20s %-10s %-52s %s\n' "$ENTRY_NAME" "$ENTRY_RISK" "${ENTRY_TARGET#"$REPO_ROOT"/}" "$ENTRY_DESCRIPTION"
   done
 }
 
@@ -384,12 +384,16 @@ backup_file_item() {
   fi
 
   scan_sensitive_words "$source"
-  echo "==> 备份 ${name}：${source} -> ${target#$REPO_ROOT/}"
+  echo "==> 备份 ${name}：${source} -> ${target#"$REPO_ROOT"/}"
   run_mkdir_parent "$target"
   if [[ "$DRY_RUN" == "1" ]]; then
     printf '[dry-run] cp %s %s\n' "$source" "$target"
   else
-    cp "$source" "$target"
+    if ! write_file_atomically "$target" copy_file_contents "$source"; then
+      echo "==> 失败 ${name}：写入失败，已保留旧文件。" >&2
+      failures=$((failures + 1))
+      return 0
+    fi
   fi
   copied=$((copied + 1))
 }
@@ -412,7 +416,7 @@ backup_dir_item() {
   fi
 
   scan_sensitive_dir "$source"
-  echo "==> 备份 ${name}：${source} -> ${target#$REPO_ROOT/}"
+  echo "==> 备份 ${name}：${source} -> ${target#"$REPO_ROOT"/}"
   if [[ "$DRY_RUN" == "1" ]]; then
     printf '[dry-run] mkdir -p %s\n' "$target"
     printf '[dry-run] cp -R %s/. %s\n' "$source" "$target"
@@ -432,12 +436,16 @@ backup_brew_item() {
     return 0
   fi
 
-  echo "==> 备份 brew：导出完整 Brewfile -> ${target#$REPO_ROOT/}"
+  echo "==> 备份 brew：导出完整 Brewfile -> ${target#"$REPO_ROOT"/}"
   run_mkdir_parent "$target"
   if [[ "$DRY_RUN" == "1" ]]; then
-    printf '[dry-run] brew bundle dump --file %s --force --describe\n' "$target"
+    printf '[dry-run] 导出并校验 Brewfile 后原子替换 %s\n' "$target"
   else
-    brew bundle dump --file "$target" --force --describe
+    if ! write_file_atomically "$target" export_brewfile_contents; then
+      echo "==> 失败 brew：导出或校验失败，已保留旧清单。" >&2
+      failures=$((failures + 1))
+      return 0
+    fi
   fi
   copied=$((copied + 1))
 }
@@ -459,12 +467,16 @@ backup_vscode_extensions_item() {
     code_cmd="code"
   fi
 
-  echo "==> 备份 vscode-extensions：导出 VS Code 扩展清单 -> ${target#$REPO_ROOT/}"
+  echo "==> 备份 vscode-extensions：导出 VS Code 扩展清单 -> ${target#"$REPO_ROOT"/}"
   run_mkdir_parent "$target"
   if [[ "$DRY_RUN" == "1" ]]; then
     printf '[dry-run] %s --list-extensions | sort > %s\n' "$code_cmd" "$target"
   else
-    "$code_cmd" --list-extensions | sort > "$target"
+    if ! write_file_atomically "$target" export_extension_contents "$code_cmd"; then
+      echo "==> 失败 vscode-extensions：导出失败，已保留旧清单。" >&2
+      failures=$((failures + 1))
+      return 0
+    fi
   fi
   copied=$((copied + 1))
 }
@@ -594,6 +606,8 @@ validate_sensitive_selection
 
 # shellcheck source=scripts/lib/logging.sh
 source "$REPO_ROOT/scripts/lib/logging.sh"
+# shellcheck source=scripts/lib/files.sh
+source "$REPO_ROOT/scripts/lib/files.sh"
 setup_script_logging "backup-configs"
 
 echo "==> 开始备份本机软件配置到仓库"

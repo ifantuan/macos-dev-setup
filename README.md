@@ -19,6 +19,7 @@
 - 正式执行写入型脚本时归档日志到 `~/.macos-dev-setup-logs/`，便于恢复失败后排障。
 - 记录 core、full、work、personal 的环境分层边界，防止工作机器敏感配置污染公开仓库。
 - 提供 clean HOME 和幂等恢复演练，降低路径、备份和重复执行问题。
+- 提供 `make test` 隔离回归测试，覆盖 Bash 3.2、备份、Homebrew 7 与失败路径。
 - 内置外部标杆对比和后续改进路线，避免指南停留在个人备份层面。
 
 ## 适用人群
@@ -60,6 +61,10 @@ make quickstart
 ```bash
 ./scripts/bootstrap.sh --profile full
 ```
+
+若要让完整清单也执行运行时初始化和自检，使用 `./scripts/quickstart.sh --profile full`。
+
+当前脚本以 Homebrew 7 为支持基线。默认清单只使用官方源，ZedG、Rebased 的来源及安装行为放在 `Brewfile.personal.example` 中供人工选择。Python 默认版本统一定义在 `configs/runtimes/versions.sh`，pnpm 由 Homebrew 管理。
 
 默认安装 Homebrew 清单时不会主动升级已有依赖。需要恢复完整清单可执行：
 
@@ -114,6 +119,7 @@ docs/                           新机部署、运行时、终端、AI、应用�
 docs/setup/recovery-drills/     真实或半真实恢复演练报告目录
 scripts/                        初始化、审计、维护、自检和恢复演练脚本
 scripts/lib/                    脚本共享辅助逻辑
+tests/                          不安装软件的隔离回归测试
 .github/                        CI、Issue 模板和 PR 模板
 ```
 
@@ -132,12 +138,14 @@ find . -path './.git' -prune -o -print
 | [docs/start-here.md](docs/start-here.md) | 按目标和时间选择阅读路径 |
 | [configs/README.md](configs/README.md) | 配置文件映射和扩展方式 |
 | [scripts/README.md](scripts/README.md) | 脚本职责和扩展方式 |
+| [tests/README.md](tests/README.md) | 回归测试运行方式和隔离边界 |
 | [docs/setup/quickstart-30min.md](docs/setup/quickstart-30min.md) | 30 分钟快速启动路径 |
 | [docs/setup/benchmark.md](docs/setup/benchmark.md) | 外部标杆对比、当前差距和改进路线 |
 | [docs/setup/profiles.md](docs/setup/profiles.md) | core、full、work、personal 的环境分层策略 |
 | [docs/setup/recovery-drill.md](docs/setup/recovery-drill.md) | 新机恢复演练记录 |
 | [docs/setup/gap-closure.md](docs/setup/gap-closure.md) | 外部对比后主要缺口的修复记录 |
 | [docs/setup/support-matrix.md](docs/setup/support-matrix.md) | 支持范围、架构和 macOS 版本边界 |
+| [docs/setup/audit-fixes-2026-10-27.md](docs/setup/audit-fixes-2026-10-27.md) | 2026-10 审计修复的行为变化、备份恢复与验证 |
 | [docs/reference/cheatsheet.md](docs/reference/cheatsheet.md) | 常用命令与快捷键速查 |
 | [docs/reference/troubleshooting.md](docs/reference/troubleshooting.md) | 常见问题排障 |
 | [docs/setup/guide.md](docs/setup/guide.md) | 新机初始化主流程 |
@@ -168,6 +176,8 @@ make audit
 make backup-configs
 make sync-back
 make doctor
+make test
+make check
 make drill
 make drill-clean
 make drill-idempotency
@@ -177,11 +187,19 @@ make record-drill
 安装 Brewfile：
 
 ```bash
-brew bundle --file Brewfile.core --verbose
-brew bundle --file Brewfile --verbose
+brew bundle --file Brewfile.core --verbose --no-upgrade
+brew bundle --file Brewfile --verbose --no-upgrade
 ```
 
-手动复制配置：
+清理清单外的依赖前先预演：
+
+```bash
+make brew-cleanup-preview
+```
+
+强制清理需要 `--acknowledge-trust-reset`，会按清单重置 Homebrew 全局信任；清单保留的第三方包缺少信任声明时会拒绝执行。前置条件和迁移方法见 [docs/setup/maintenance.md](docs/setup/maintenance.md)。
+
+复制配置优先使用 `./scripts/bootstrap.sh --skip-brew`：它会备份旧配置，保留原链接和文件权限，父目录为链接时跳过该项。手动复制不做备份，并会穿过符号链接改写其指向的文件，仅在确认目标不是链接时使用：
 
 ```bash
 cp configs/zsh/zshrc ~/.zshrc

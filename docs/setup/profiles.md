@@ -7,11 +7,13 @@
 | Profile | 目标 | 自动化范围 | 不自动化内容 |
 |---------|------|------------|--------------|
 | `core` | 30 分钟内进入开发 | `Brewfile.core`、dotfiles、运行时、自检 | 大量 GUI、移动端模拟器、本地模型 |
-| `full` | 恢复完整个人工作站 | `Brewfile`、dotfiles、运行时、自检 | 登录态、私钥、token、公司内网配置 |
+| `full` | 恢复完整个人工作站 | `make full` 只安装 `Brewfile` 和 dotfiles；`quickstart.sh --profile full` 另执行运行时、自检 | 登录态、私钥、token、公司内网配置 |
 | `work` | 公司机器差异层 | 公司允许公开记录的工具名和流程 | VPN、证书、代理账号、内网地址 |
 | `personal` | 个人偏好差异层 | 娱乐、媒体、个人效率工具说明 | Apple ID、购买记录、私有云盘路径 |
 
 当前仓库实际提供 `core` 和 `full` 两个可执行 profile。`work` 和 `personal` 暂不做自动安装脚本，避免把敏感差异混进公共配置。
+
+默认 core/full 均只使用官方 Homebrew 源。`Brewfile.personal.example` 中的第三方示例不自动启用；选择前应审查来源、安装步骤及信任范围，尤其是移除 macOS 隔离属性的行为。
 
 ## 推荐目录策略
 

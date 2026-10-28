@@ -10,6 +10,7 @@
 | `configs/ghostty/config` | `~/.config/ghostty/config` | Ghostty 字体、主题、分屏、快捷键 |
 | `configs/starship/starship.toml` | `~/.config/starship.toml` | Starship 提示符 |
 | `configs/tmux/tmux.conf` | `~/.tmux.conf` | tmux 前缀键、窗口、面板、颜色 |
+| `configs/runtimes/versions.sh` | 由运行时脚本读取，不复制 | Java、Python、Node.js 默认版本，可用环境变量覆盖 |
 | `configs/git/gitconfig.example` | `~/.gitconfig` | Git 模板，需复制后填写真实身份 |
 | `configs/ssh/config.example` | `~/.ssh/config` | SSH 模板，需复制后检查私钥路径 |
 | `configs/npm/npmrc.example` | `~/.npmrc` | npm 模板，真实 token 通过环境变量或私有文件提供 |

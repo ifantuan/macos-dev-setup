@@ -60,6 +60,16 @@ check "record-recovery-drill.sh 语法" bash -n "$REPO_ROOT/scripts/record-recov
 check "install-runtimes.sh 语法" bash -n "$REPO_ROOT/scripts/install-runtimes.sh"
 check "sync-back.sh 语法" bash -n "$REPO_ROOT/scripts/sync-back.sh"
 check "logging.sh 语法" bash -n "$REPO_ROOT/scripts/lib/logging.sh"
+check "files.sh 语法" bash -n "$REPO_ROOT/scripts/lib/files.sh"
+# 检测脚本由 brew ruby 运行，优先用同一解释器检查语法，避免系统 Ruby 版本差异导致误报。
+if command -v brew >/dev/null 2>&1; then
+  check "第三方包来源检测 Ruby 语法" env HOMEBREW_NO_AUTO_UPDATE=1 brew ruby -- -c "$REPO_ROOT/scripts/lib/find-shadowed-packages.rb"
+elif command -v ruby >/dev/null 2>&1; then
+  check "第三方包来源检测 Ruby 语法" ruby -c "$REPO_ROOT/scripts/lib/find-shadowed-packages.rb"
+else
+  printf '==> 第三方包来源检测 Ruby 语法\n    skipped: brew 与 ruby 均未安装\n'
+fi
+check "运行时版本基线语法" bash -n "$REPO_ROOT/configs/runtimes/versions.sh"
 check "zshrc 语法" zsh -n "$REPO_ROOT/configs/zsh/zshrc"
 check "Starship 配置存在" test -f "$REPO_ROOT/configs/starship/starship.toml"
 check "Git 配置模板存在" test -f "$REPO_ROOT/configs/git/gitconfig.example"
@@ -104,7 +114,7 @@ if bad:
 PY
 
 if command -v shellcheck >/dev/null 2>&1; then
-  check "ShellCheck" shellcheck "$REPO_ROOT"/scripts/*.sh "$REPO_ROOT"/scripts/lib/*.sh
+  check "ShellCheck" shellcheck "$REPO_ROOT"/scripts/*.sh "$REPO_ROOT"/scripts/lib/*.sh "$REPO_ROOT/configs/runtimes/versions.sh"
 elif [[ "$REQUIRE_SHELLCHECK" == "1" ]]; then
   printf '==> ShellCheck\n' >&2
   printf '    failed: shellcheck 未安装\n' >&2
@@ -305,8 +315,8 @@ elif command -v brew >/dev/null 2>&1; then
     check "$(basename "$brewfile") 示例可读取" env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle list --file "$brewfile" --all
   done
   if [[ "$CHECK_BREW_INSTALLED" == "1" ]]; then
-    check "Brewfile.core 依赖已安装" env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$REPO_ROOT/Brewfile.core"
-    check "Brewfile 依赖已安装" env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$REPO_ROOT/Brewfile"
+    check "Brewfile.core 依赖已安装" env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$REPO_ROOT/Brewfile.core" --no-upgrade
+    check "Brewfile 依赖已安装" env HOMEBREW_NO_AUTO_UPDATE=1 brew bundle check --file "$REPO_ROOT/Brewfile" --no-upgrade
   else
     printf '==> Brewfile 依赖已安装\n    skipped: 设置 CHECK_BREW_INSTALLED=1 可启用完整安装状态检查\n'
   fi

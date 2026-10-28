@@ -10,6 +10,10 @@
 | `recovery-drill.md` | 新机恢复演练记录 |
 | `recovery-drills/` | 真实或半真实恢复演练报告 |
 | `gap-closure.md` | 外部对比后主要缺口的修复记录 |
+| [audit-2026-10-27.md](audit-2026-10-27.md) | 全面审计、Homebrew 7 兼容性、问题复现与优化顺序 |
+| [audit-2026-10-27-review.md](audit-2026-10-27-review.md) | 上述审计报告的逐条复核结果 |
+| [audit-fixes-2026-10-27.md](audit-fixes-2026-10-27.md) | A01–A14 修复结果、行为变化与回归验证 |
+| [audit-2026-10-27-claude-followup-review.md](audit-2026-10-27-claude-followup-review.md) | Claude 追加修复的独立复核、问题证据与回退验证 |
 | `support-matrix.md` | 支持范围、架构和 macOS 版本边界 |
 | `repository-design.md` | 仓库结构、边界和扩展原则 |
 | `benchmark.md` | 外部标杆对比、当前差距和改进路线 |

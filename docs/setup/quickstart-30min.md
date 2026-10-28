@@ -4,7 +4,7 @@
 
 ## 结论
 
-如果网络正常、Xcode Command Line Tools 安装顺利，这个仓库现在可以走半小时路径：
+30 分钟是核心恢复目标，尚未用真实空机计时证明；下方各阶段估时合计约 28–53 分钟。先安装所需工具：
 
 ```bash
 git clone https://github.com/<your-name>/macos-dev-setup.git
@@ -40,6 +40,14 @@ make quickstart
 | 登录与验证 | 5 分钟 | GitHub、1Password、IDE、AI 工具 |
 
 网络慢或首次安装 Xcode CLT 时可能超过 30 分钟。
+
+只需要部分语言时可通过环境变量缩小初始化范围，例如：
+
+```bash
+INSTALL_JAVA=0 INSTALL_PYTHON=0 make quickstart
+```
+
+默认版本见 `configs/runtimes/versions.sh`；可设置 `PYTHON_VERSION`、`JAVA_VERSION`、`NODE_VERSION` 覆盖。pnpm 由 Homebrew 安装，初始化不依赖 Corepack。
 
 ## 步骤 1：安装基础工具
 
@@ -137,7 +145,7 @@ uv pip install -r requirements.txt
 `scripts/install-runtimes.sh` 默认已经通过 `pyenv` 安装全局 Python。进入项目后按需固定本项目版本：
 
 ```bash
-pyenv local 3.12.2
+pyenv local 3.12.16
 ```
 
 Java 项目：
@@ -166,7 +174,7 @@ claude
 或者只安装完整 Brewfile：
 
 ```bash
-brew bundle --file Brewfile --verbose
+brew bundle --file Brewfile --verbose --no-upgrade
 ```
 
 ## 半小时边界

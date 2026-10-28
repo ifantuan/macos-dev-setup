@@ -181,14 +181,9 @@ brew doctor
 
 ### 4.0 第三方 Tap 说明
 
-当前清单里有少数工具不来自官方 `homebrew/core` 或 `homebrew/cask`，需要先声明 tap，否则新机上 `brew bundle` 可能找不到对应条目。
+默认 core/full 清单只使用官方 `homebrew/core` 和 `homebrew/cask`。Bundle 已内置，不再声明 `homebrew/bundle`；`bun` 和 `opencode` 直接使用官方 formula。
 
-| Tap | 用途 |
-|-----|------|
-| `anomalyco/tap` | `opencode` 命令行工具 |
-| `oven-sh/bun` | Bun 官方 Homebrew 源 |
-| `x6nux/zedg` | ZedG 汉化版 |
-| `detachhead/tap` | Rebased Git 客户端 |
+ZedG 与 Rebased 已移到 `Brewfile.personal.example` 的注释示例。其上游安装定义含移除 macOS 隔离属性的步骤，默认路径不安装、不授权。确需使用时先审查源码，再在私有清单中用完整包名按包声明信任，避免信任整个 tap。具体出处见示例中的链接。
 
 ### 4.1 使用仓库清单
 
@@ -502,8 +497,8 @@ export PKG_CONFIG_PATH="$(brew --prefix openssl@3)/lib/pkgconfig:$(brew --prefix
 
 ```bash
 pyenv install 3.11.8
-pyenv install 3.12.2
-pyenv global 3.12.2
+pyenv install 3.12.16
+pyenv global 3.12.16
 ```
 
 如果需要旧项目兼容，可额外安装 `3.10.x`：
@@ -590,11 +585,11 @@ node -v > .node-version
 
 ### 9.2 启用 pnpm 与 bun
 
-```bash
-corepack enable
-corepack prepare pnpm@latest --activate
+pnpm 统一由 Homebrew 安装，脚本不启用 Corepack。Node 25 起不随包分发 Corepack，重新打开终端不能解决其缺失。已有项目若明确依赖 Corepack，应按项目规范单独选择管理方式，避免它的代理与 Homebrew pnpm 相互覆盖。
 
-pnpm -v
+```bash
+brew install pnpm
+pnpm --version
 bun -v
 ```
 
@@ -803,7 +798,7 @@ git diff Brewfile
 | JDK | 项目优先，默认使用脚本中的 Zulu 8，17 / 21 按项目需要补充 |
 | Python | 项目虚拟环境隔离，全局只作为默认工具链 |
 | Node.js | 项目用 `.node-version` 固定 |
-| pnpm | 使用 `corepack` 管理版本 |
+| pnpm | 由 Homebrew 安装，按项目声明选择版本 |
 | IDE | JetBrains Toolbox / Homebrew Cask 更新 |
 | AI 工具 | 单独升级，避免在关键项目交付期集中更新 |
 

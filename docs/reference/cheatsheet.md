@@ -36,12 +36,12 @@
 
 | 命令 | 用途 |
 |------|------|
-| `brew bundle --file Brewfile.core --verbose` | 安装核心清单 |
-| `brew bundle --file Brewfile --verbose` | 安装完整清单 |
-| `brew bundle --file Brewfile --verbose --no-upgrade` | 按清单安装但不主动升级 |
-| `brew bundle check --file Brewfile.core` | 检查核心清单缺失项 |
-| `brew bundle cleanup --file Brewfile` | 预演清理清单外依赖 |
-| `./scripts/brew-maintenance.sh --profile full --cleanup-force` | 二次确认后清理清单外依赖 |
+| `brew bundle --file Brewfile.core --verbose --no-upgrade` | 安装核心清单 |
+| `brew bundle --file Brewfile --verbose --no-upgrade` | 安装完整清单 |
+| `./scripts/brew-maintenance.sh --profile full --install --upgrade` | 明确升级完整清单 |
+| `brew bundle check --file Brewfile.core --no-upgrade` | 检查核心清单缺失项 |
+| `./scripts/brew-maintenance.sh --profile full --cleanup-preview` | 只预演，非零退出码需阅读诊断 |
+| `./scripts/brew-maintenance.sh --profile full --cleanup-force --acknowledge-trust-reset` | 二次确认后清理清单外依赖 |
 | `brew update && brew upgrade` | 更新软件 |
 | `brew cleanup` | 清理旧版本缓存 |
 | `brew doctor` | 检查 Homebrew 环境 |
@@ -110,13 +110,13 @@
 
 | 命令 | 用途 |
 |------|------|
-| `pyenv install 3.12.2` | 安装推荐 Python |
-| `pyenv global 3.12.2` | 设置全局 Python |
-| `pyenv local 3.12.2` | 项目固定 Python 版本 |
+| `pyenv install 3.12.16` | 安装推荐 Python |
+| `pyenv global 3.12.16` | 设置全局 Python |
+| `pyenv local 3.12.16` | 项目固定 Python 版本 |
 | `uv venv` | 创建虚拟环境 |
 | `source .venv/bin/activate` | 激活虚拟环境 |
 | `uv pip install -r requirements.txt` | 安装依赖 |
-| `uv python install 3.12.2 --default` | 按需快速安装预编译 Python |
+| `uv python install 3.12.16 --default` | 按需快速安装预编译 Python |
 | `uv python list --only-installed` | 查看 uv 安装的 Python |
 | `pipx install <tool>` | 安装全局 Python CLI |
 
@@ -127,8 +127,8 @@
 | `fnm install --lts` | 安装 Node LTS |
 | `fnm default lts-latest` | 设置默认 Node |
 | `node -v` | 查看 Node 版本 |
-| `corepack enable` | 启用包管理器代理 |
-| `corepack prepare pnpm@latest --activate` | 激活 pnpm |
+| `brew install pnpm` | 安装 Homebrew 管理的 pnpm |
+| `pnpm --version` | 验证 pnpm 版本 |
 | `pnpm install` | 安装依赖 |
 | `pnpm dev` | 启动开发服务 |
 | `pnpm test` | 运行测试 |

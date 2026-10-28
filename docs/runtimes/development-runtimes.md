@@ -1,5 +1,7 @@
 # 开发运行时手册
 
+默认版本统一维护在 `configs/runtimes/versions.sh`：Zulu Java 8.0.492、Python 3.12.16、Node.js 当前 LTS。环境变量 `JAVA_VERSION`、`PYTHON_VERSION`、`NODE_VERSION` 可覆盖这些值，已有项目仍以自身版本要求为准。脚本独立执行各语言阶段，失败会汇总为非零退出码，不再把缺少命令或 Maven 安装失败报告为成功。
+
 ## Java
 
 默认策略：
@@ -54,8 +56,8 @@ pipx --version
 项目建议：
 
 ```bash
-pyenv global 3.12.2
-pyenv local 3.12.2
+pyenv global 3.12.16
+pyenv local 3.12.16
 uv venv
 source .venv/bin/activate
 ```
@@ -74,6 +76,7 @@ pyproject.toml
 
 - fnm 管 Node.js。
 - pnpm 作为主包管理器。
+- pnpm 由 Homebrew 安装，不依赖 Corepack；脚本会实际检查 Node.js 和 pnpm 版本。
 - bun 用于支持 Bun 的项目、脚本或工具。
 - 项目用 `.node-version` 固定版本。
 

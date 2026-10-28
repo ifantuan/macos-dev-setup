@@ -4,6 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DRY_RUN="${DRY_RUN:-0}"
 INCLUDE_BREW="${INCLUDE_BREW:-0}"
+failures=0
 
 usage() {
   cat <<'EOF'
@@ -44,6 +45,8 @@ done
 
 # shellcheck source=scripts/lib/logging.sh
 source "$REPO_ROOT/scripts/lib/logging.sh"
+# shellcheck source=scripts/lib/files.sh
+source "$REPO_ROOT/scripts/lib/files.sh"
 setup_script_logging "sync-back"
 
 run() {
@@ -67,7 +70,10 @@ sync_file() {
 
   echo "==> 同步 $source -> $target"
   run mkdir -p "$(dirname "$target")"
-  run cp "$source" "$target"
+  if ! run write_file_atomically "$target" copy_file_contents "$source"; then
+    echo "==> 同步失败，已保留旧文件：$target" >&2
+    failures=$((failures + 1))
+  fi
 }
 
 echo "==> 同步本机配置回仓库"
@@ -83,9 +89,13 @@ if [[ "$INCLUDE_BREW" == "1" ]]; then
     exit 1
   fi
   echo "==> 导出完整 Brewfile"
-  run brew bundle dump --file "$REPO_ROOT/Brewfile" --force --describe
+  if ! run write_file_atomically "$REPO_ROOT/Brewfile" export_brewfile_contents; then
+    echo "==> Brewfile 导出失败，已保留旧清单。" >&2
+    failures=$((failures + 1))
+  fi
 else
   echo "==> 跳过 Brewfile 导出。需要同步软件清单时加 --include-brew。"
 fi
 
-echo "==> 同步完成。请检查 git diff 后再提交。"
+echo "==> 同步汇总：失败 $failures 项。请检查 git diff 后再提交。"
+[[ "$failures" -eq 0 ]]

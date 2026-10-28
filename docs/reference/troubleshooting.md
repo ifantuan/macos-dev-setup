@@ -8,11 +8,11 @@
 |------|--------|----------|
 | 新机脚本中断 | `make dry-run`、查看 `~/.macos-dev-setup-logs/` | 重新运行 `make quickstart`，再按日志定位失败命令 |
 | `brew: command not found` | `uname -m`、`ls /opt/homebrew /usr/local` | 按 Apple Silicon 或 Intel 路径写入 `~/.zprofile` |
-| `brew bundle` 失败 | `brew bundle check --file Brewfile.core --verbose` | 先恢复 core，完整 GUI 清单延后 |
+| `brew bundle` 失败 | `brew bundle check --file Brewfile.core --no-upgrade --verbose` | 先恢复 core，完整 GUI 清单延后 |
 | Shell 启动报错 | `zsh -n ~/.zshrc`、`zsh -n configs/zsh/zshrc` | 检查 `~/.zshrc.local` 是否含私有错误配置 |
 | Homebrew API 或下载异常 | `env | rg -i 'proxy|homebrew'` | 临时关闭代理或改用可用镜像后重试 |
 | Java 安装失败 | `ls ~/.sdkman`、查看日志 | 重新执行 `./scripts/install-runtimes.sh --no-python --no-node` |
-| Node / pnpm 不存在 | `command -v fnm corepack` | 重新打开终端后执行 `fnm use lts-latest` 和 `corepack enable` |
+| Node / pnpm 不存在 | `command -v fnm pnpm` | 重新打开终端后执行 `fnm use lts-latest` 并检查 `brew list pnpm` |
 | 配置同步前不确定差异 | `./scripts/audit-environment.sh --profile core --no-diff` | 先 dry-run，再人工审查 `git diff` |
 
 ```bash
@@ -95,14 +95,14 @@ eval "$(/usr/local/bin/brew shellenv)"
 先看缺失项：
 
 ```bash
-brew bundle check --file Brewfile.core --verbose
-brew bundle check --file Brewfile --verbose
+brew bundle check --file Brewfile.core --no-upgrade --verbose
+brew bundle check --file Brewfile --no-upgrade --verbose
 ```
 
 只重试核心清单：
 
 ```bash
-brew bundle --file Brewfile.core --verbose
+brew bundle --file Brewfile.core --verbose --no-upgrade
 ```
 
 完整 GUI 清单失败时，不要阻塞开发，先完成核心路径：
@@ -221,7 +221,7 @@ skipped: 未安装 font-maple-mono-nf-cn
 说明当前机器还没完整安装核心清单。先安装核心依赖：
 
 ```bash
-brew bundle --file Brewfile.core --verbose
+brew bundle --file Brewfile.core --verbose --no-upgrade
 ```
 
 如果要把缺失字体视为失败，运行：
@@ -280,12 +280,13 @@ node -v
 ### `pnpm` 不存在
 
 ```bash
-corepack enable
-corepack prepare pnpm@latest --activate
-pnpm -v
+brew install pnpm
+pnpm --version
 ```
 
 如果项目固定 pnpm 版本，以项目 `packageManager` 字段为准。
+
+本仓库默认由 Homebrew 安装 pnpm，运行时脚本不再激活 Corepack。Node 25 起不内置 Corepack，因此“重新打开终端再执行 corepack”不是安装方案。若已有代理遮挡 Homebrew 的 pnpm，先用 `type -a pnpm` 检查实际来源，再按项目选择一种管理方式。
 
 ## Python
 
@@ -309,7 +310,7 @@ python --version
 
 ```bash
 ./scripts/install-runtimes.sh --no-java --no-node
-pyenv local 3.12.2
+pyenv local 3.12.16
 python --version
 ```
 
@@ -324,7 +325,7 @@ brew install openssl@3 readline sqlite3 xz zlib tcl-tk
 再重试：
 
 ```bash
-pyenv install 3.12.2
+pyenv install 3.12.16
 ```
 
 ## Java / Maven
@@ -403,7 +404,7 @@ docker compose up -d
 ### 命令不存在
 
 ```bash
-brew bundle --file Brewfile.core --verbose
+brew bundle --file Brewfile.core --verbose --no-upgrade
 command -v codex claude
 ```
 

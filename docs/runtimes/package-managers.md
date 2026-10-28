@@ -35,28 +35,30 @@
 
 ## Homebrew
 
+支持基线为 Homebrew 7。默认清单仅使用官方源；Bundle 已内置，无需安装 `homebrew/bundle`。导出默认含说明注释，不再传已停用的 `--describe`。需要保留旧清单直到导出成功时，使用仓库的 `sync-back.sh --include-brew` 或 `backup-configs.sh --items brew`。
+
 安装核心清单：
 
 ```bash
-brew bundle --file Brewfile.core --verbose
+brew bundle --file Brewfile.core --verbose --no-upgrade
 ```
 
 安装完整清单：
 
 ```bash
-brew bundle --file Brewfile --verbose
+brew bundle --file Brewfile --verbose --no-upgrade
 ```
 
 检查缺失：
 
 ```bash
-brew bundle check --file Brewfile
+brew bundle check --file Brewfile --no-upgrade
 ```
 
 导出当前机器清单：
 
 ```bash
-brew bundle dump --file Brewfile --force --describe
+brew bundle dump --file Brewfile --force
 ```
 
 App Store 应用不放入默认 Brewfile。确实需要时先阅读 [../apps/app-store.md](../apps/app-store.md)，再决定是否引入 `mas` 或 `Masfile.example`。
@@ -121,15 +123,15 @@ sdk install gradle
 默认用 `pyenv` 安装 Python 解释器，便于复用 `.python-version` 并统一项目版本：
 
 ```bash
-pyenv install 3.12.2
-pyenv global 3.12.2
+pyenv install 3.12.16
+pyenv global 3.12.16
 pyenv versions
 ```
 
 需要快速使用预编译解释器时，可临时改用 `uv`：
 
 ```bash
-uv python install 3.12.2 --default
+uv python install 3.12.16 --default
 uv python list --only-installed
 ```
 
@@ -165,6 +167,8 @@ pipx list
 
 ## fnm / pnpm / bun
 
+默认版本集中在 `configs/runtimes/versions.sh`，可用 `NODE_VERSION` 等环境变量覆盖。pnpm 只由 Homebrew 安装，运行时脚本检查它是否可用，不再运行 Corepack。项目确需 Corepack 时请另选对应管理方案；它从 Node 25 起不随 Node 分发，不能依赖重开终端自动出现。
+
 Node.js：
 
 ```bash
@@ -176,8 +180,8 @@ fnm use lts-latest
 pnpm：
 
 ```bash
-corepack enable
-corepack prepare pnpm@latest --activate
+brew install pnpm
+pnpm --version
 pnpm setup
 ```
 
@@ -202,7 +206,7 @@ node -v > .node-version
 | `fnm install --lts` | 安装 Node LTS |
 | `fnm use <version>` | 切换 Node |
 | `fnm default <version>` | 设置默认 Node |
-| `corepack enable` | 启用包管理器代理 |
+| `brew install pnpm` | 安装 Homebrew 管理的 pnpm |
 | `pnpm install` | 安装依赖 |
 | `pnpm add <pkg>` | 添加依赖 |
 | `pnpm dlx <tool>` | 临时运行工具 |

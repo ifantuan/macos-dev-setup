@@ -30,9 +30,6 @@ export PAGER="less -R"
 export LESS="-R -i -M"
 
 # Homebrew 镜像、公司代理和地区网络差异建议放 ~/.zshrc.local 或 ~/.zprofile。
-if [[ -n "${MACOS_DEV_SETUP_HOMEBREW_BOTTLE_DOMAIN:-}" ]]; then
-  export HOMEBREW_BOTTLE_DOMAIN="$MACOS_DEV_SETUP_HOMEBREW_BOTTLE_DOMAIN"
-fi
 
 # 优先使用 Homebrew curl。
 [[ -d "/opt/homebrew/opt/curl/bin" ]] && export PATH="/opt/homebrew/opt/curl/bin:$PATH"
@@ -110,6 +107,13 @@ export BUN_INSTALL="$HOME/.bun"
 # 本机私有配置
 # =========================
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+
+# 必须在本地变量加载后应用镜像，每个新终端均可直接生效。
+if [[ -n "${MACOS_DEV_SETUP_HOMEBREW_BOTTLE_DOMAIN:-}" ]]; then
+  export HOMEBREW_BOTTLE_DOMAIN="$MACOS_DEV_SETUP_HOMEBREW_BOTTLE_DOMAIN"
+fi
+# uv 和 pipx 的可执行文件默认位于此目录。
+[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
 
 # =========================
 # 常用别名

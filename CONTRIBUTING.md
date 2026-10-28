@@ -24,6 +24,7 @@
 
 ```bash
 ./scripts/doctor.sh
+make test
 make drill-clean
 make drill-idempotency
 ```
@@ -34,7 +35,9 @@ make drill-idempotency
 CHECK_BREW_INSTALLED=1 ./scripts/doctor.sh
 ```
 
-至少确认：
+回归测试仅使用临时家目录、仓库副本和桩命令，不安装或卸载软件。默认通过 `/bin/bash` 验证 macOS 自带 Bash 3.2；现代 Bash 可用 `TEST_BASH="$(brew --prefix bash)/bin/bash" make test` 验证。新增失败路径时，应先确认测试在旧实现上失败，再验证修复。
+
+脚本语法至少确认：
 
 ```bash
 bash -n scripts/bootstrap.sh
@@ -47,6 +50,7 @@ bash -n scripts/drill-idempotency.sh
 bash -n scripts/quickstart.sh
 bash -n scripts/install-runtimes.sh
 bash -n scripts/sync-back.sh
+ruby -c scripts/lib/find-shadowed-packages.rb
 zsh -n configs/zsh/zshrc
 ```
 

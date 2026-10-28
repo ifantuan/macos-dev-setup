@@ -8,23 +8,30 @@ jobs:
   validate:
     runs-on: macos-latest
     steps:
-      - name: Checkout
+      - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: Install validation tools
+      - name: 安装校验工具
         run: |
-          brew install shellcheck gitleaks
+          brew install bash shellcheck gitleaks
           brew install --cask ghostty font-maple-mono-nf-cn
 
-      - name: Validate dry-run paths
+      - name: 来源检测与系统 Bash 及现代 Bash 回归测试
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew ruby -- -c scripts/lib/find-shadowed-packages.rb
+          TEST_BASH=/bin/bash python3 tests/test_regressions.py
+          TEST_BASH="$(brew --prefix bash)/bin/bash" python3 tests/test_regressions.py
+
+      - name: 验证预演与恢复路径
         run: |
           ./scripts/quickstart.sh --dry-run
           ./scripts/bootstrap.sh --profile work-example --dry-run
           ./scripts/bootstrap.sh --profile personal-example --dry-run
           ./scripts/apply-macos-defaults.sh --dry-run
           ./scripts/sync-back.sh --dry-run
+          ./scripts/backup-configs.sh --safe --dry-run
           ./scripts/drill-clean-home.sh
           ./scripts/drill-idempotency.sh
 
-      - name: Run doctor
+      - name: 严格仓库自检
         run: REQUIRE_SHELLCHECK=1 REQUIRE_GITLEAKS=1 REQUIRE_GHOSTTY_VALIDATE=1 ./scripts/doctor.sh
